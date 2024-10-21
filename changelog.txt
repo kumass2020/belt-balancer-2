@@ -2,6 +2,11 @@
 Version: 2.0.1
 Date: 21.10.2024
   Bugfix:
+    - Disable removing collision for now
+---------------------------------------------------------------------------------------------------
+Version: 2.0.1
+Date: 21.10.2024
+  Bugfix:
     - Fix disabling collision making it hard to properly place balancers
 ---------------------------------------------------------------------------------------------------
 Version: 2.0.0

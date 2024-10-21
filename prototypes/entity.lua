@@ -1,3 +1,11 @@
+--local collision_mask = {}
+local render_layer = "object"
+
+-- if settings.startup["belt-balancer-remove-collision"].value then
+--     collision_mask = {"item-layer", "object-layer", "water-tile"}
+--     render_layer = "lower-object"
+-- end
+
 data:extend {
     {
         type = "simple-entity-with-force",
@@ -16,7 +24,8 @@ data:extend {
         },
         collision_box = { { -0.35, -0.35 }, { 0.35, 0.35 } },
         selection_box = { { -0.5, -0.5 }, { 0.5, 0.5 } },
-        render_layer = "object",
+        --collision_mask = collision_mask,
+        render_layer = render_layer,
         animations = {
             {
                 filename = "__belt-balancer-performance__/graphics/entities/balancer.png",
