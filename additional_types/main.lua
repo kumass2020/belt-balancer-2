@@ -1,7 +1,7 @@
 ---@class Balancer
 local Balancer = {}
 
---- unit_numbers of the related Balancer-Part-Entities. With this, it is possible, to get all parts, from `global.parts`.
+--- unit_numbers of the related Balancer-Part-Entities. With this, it is possible, to get all parts, from `storage.parts`.
 ---@type uint[]
 Balancer.parts = nil
 
@@ -13,7 +13,7 @@ Balancer.input_lanes = nil
 ---@type uint[]
 Balancer.output_lanes = nil
 
---- unit_number of this balancer. The unit_number has to be tracked manually, free unit_number can be get from `global.next_balancer_unit_number`.
+--- unit_number of this balancer. The unit_number has to be tracked manually, free unit_number can be get from `storage.next_balancer_unit_number`.
 ---@type uint
 Balancer.unit_number = nil
 
@@ -99,45 +99,45 @@ Part.entity = nil
 
 --------------------------------------------------------------------------------------------------------------
 
----@class Global
-local Global = {}
+---@class Storage
+local Storage = {}
 
 --- Balancer are custom objects, so they have a custom tracked unit_number
 ---@type table<uint, Balancer>
-Global.balancer = nil
+Storage.balancer = nil
 
 --- table of all Balancer-Part-Entities, with additionally information
 --- The uint is the unit_number of the related LuaEntity
 ---@type table<uint, Part>
-Global.parts = nil
+Storage.parts = nil
 
 --- table of all Belts, that are used in Balancer
 --- The uint is the unit_number of the related LuaEntity
 ---@type table<uint, Belt>
-Global.belts = nil
+Storage.belts = nil
 
 --- table of lanes
 --- LuaTransportLine has no unit_number. Need to track it myself!!
 --- This is here, so it is easier to get the Lines (no need to iterate over all belts and then their lanes)
 ---@type table<uint, LuaTransportLine>
-Global.lanes = nil
+Storage.lanes = nil
 
 --- Balancer need to have a unique id (unit_number). This is, the next free uid to use!
 ---@type uint
-Global.next_balancer_unit_number = nil
+Storage.next_balancer_unit_number = nil
 
 --- Lanes need to have a unique id (unit_number). This is the next free uid to use!
 ---@type uint
-Global.next_lane_unit_number = nil
+Storage.next_lane_unit_number = nil
 
 --- The next belt index to check
 ---@type number
-Global.next_belt_check = nil
+Storage.next_belt_check = nil
 
 --------------------------------------------------------------------------------------------------------------
 
----@type Global
-global = nil
+---@type Storage
+storage = nil
 
 
 

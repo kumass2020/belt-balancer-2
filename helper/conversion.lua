@@ -6,7 +6,6 @@ function convert_LuaItemStack_to_SimpleItemStack(lua_item_stack)
         name = lua_item_stack.name,
         count = lua_item_stack.count,
         health = lua_item_stack.health,
-        durability = lua_item_stack.durability,
     }
 
     local itemtype = lua_item_stack.prototype.type
@@ -14,6 +13,8 @@ function convert_LuaItemStack_to_SimpleItemStack(lua_item_stack)
         simple_item.ammo = lua_item_stack.ammo
     elseif itemtype == "item-with-tags" then
         simple_item.tags = lua_item_stack.tags
+    elseif itemtype == "tool" then
+        simple_item.durability = lua_item_stack.durability
     end
 
     return simple_item

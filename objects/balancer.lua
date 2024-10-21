@@ -4,7 +4,7 @@ require("helper.conversion")
 
 balancer_functions = {}
 
----creates a new balancer object in the global stack
+---creates a new balancer object in the storage stack
 ---This will NOT set the parts and the lanes!!
 ---@return Balancer the created balancer
 function balancer_functions.new()
@@ -18,7 +18,7 @@ function balancer_functions.new()
     balancer.input_lanes = {}
     balancer.output_lanes = {}
 
-    global.balancer[balancer.unit_number] = balancer
+    storage.balancer[balancer.unit_number] = balancer
 
     return balancer
 end
@@ -28,25 +28,25 @@ end
 ---@param balancer_index uint
 ---@param balancer_index2 uint
 function balancer_functions.merge(balancer_index, balancer_index2)
-    local balancer = global.balancer[balancer_index]
-    local balancer2 = global.balancer[balancer_index2]
+    local balancer = storage.balancer[balancer_index]
+    local balancer2 = storage.balancer[balancer_index2]
 
     for k, part_index in pairs(balancer2.parts) do
         balancer.parts[k] = part_index
 
         -- change balancer link on part too
-        local part = global.parts[part_index]
+        local part = storage.parts[part_index]
         part.balancer = balancer_index
 
         -- change balancer link on belts too
         for _, belt_index in pairs(part.input_belts) do
-            local belt = global.belts[belt_index]
+            local belt = storage.belts[belt_index]
             belt.output_balancer[balancer_index2] = nil
             belt.output_balancer[balancer_index] = balancer_index
         end
 
         for _, belt_index in pairs(part.output_belts) do
-            local belt = global.belts[belt_index]
+            local belt = storage.belts[belt_index]
             belt.input_balancer[balancer_index2] = nil
             belt.input_balancer[balancer_index] = balancer_index
         end
@@ -64,8 +64,8 @@ function balancer_functions.merge(balancer_index, balancer_index2)
         table.insert(balancer.buffer, item)
     end
 
-    -- remove merged balancer from the global stack
-    global.balancer[balancer_index2] = nil
+    -- remove merged balancer from the storage stack
+    storage.balancer[balancer_index2] = nil
 
     -- unregister nth_tick
     unregister_on_tick(balancer_index2)
@@ -94,7 +94,7 @@ function balancer_functions.find_from_part(part)
         -- add to existing balancer
         local balancer
         for _, index in pairs(nearby_balancer_indices) do
-            balancer = global.balancer[index]
+            balancer = storage.balancer[index]
             balancer.parts[entity.unit_number] = entity.unit_number
         end
         return balancer.unit_number
@@ -107,10 +107,10 @@ function balancer_functions.find_from_part(part)
                 base_balancer_index = nearby_balancer_index
 
                 -- add splitter to balancer
-                local balancer = global.balancer[nearby_balancer_index]
+                local balancer = storage.balancer[nearby_balancer_index]
                 balancer.parts[entity.unit_number] = entity.unit_number
             else
-                -- merge balancer and remove them from global table
+                -- merge balancer and remove them from storage table
                 balancer_functions.merge(base_balancer_index, nearby_balancer_index)
             end
         end
@@ -121,7 +121,7 @@ end
 ---recalculate_nth_tick
 ---@param balancer_index uint
 function balancer_functions.recalculate_nth_tick(balancer_index)
-    local balancer = global.balancer[balancer_index]
+    local balancer = storage.balancer[balancer_index]
 
     if table_size(balancer.input_lanes) == 0 or table_size(balancer.output_lanes) == 0 or table_size(balancer.parts) == 0 then
         unregister_on_tick(balancer_index)
@@ -134,9 +134,9 @@ function balancer_functions.recalculate_nth_tick(balancer_index)
     local run_on_tick_override = false
 
     for _, part in pairs(balancer.parts) do
-        local stack_part = global.parts[part]
+        local stack_part = storage.parts[part]
         for _, belt in pairs(stack_part.output_belts) do
-            local stack_belt = global.belts[belt]
+            local stack_belt = storage.belts[belt]
             local belt_speed = stack_belt.entity.prototype.belt_speed
             local ticks_per_tile = 0.25 / belt_speed
             local nth_tick = math.floor(ticks_per_tile)
@@ -178,7 +178,7 @@ function balancer_functions.recalculate_nth_tick(balancer_index)
 end
 
 function balancer_functions.run(balancer_index)
-    local balancer = global.balancer[balancer_index]
+    local balancer = storage.balancer[balancer_index]
     local output_lane_count = table_size(balancer.output_lanes)
     local next_lane_count = table_size(balancer.input_lanes)
 
@@ -241,23 +241,23 @@ function balancer_functions.run(balancer_index)
     end
 end
 
----check if this balancer still needs to be tracked, if not, remove it from global stack!
+---check if this balancer still needs to be tracked, if not, remove it from storage stack!
 ---@param balancer_index uint
 ---@param drop_to Item_drop_param
 ---@return boolean True if balancer is still tracked, false if balancer was removed
 function balancer_functions.check_track(balancer_index, drop_to)
-    local balancer = global.balancer[balancer_index]
+    local balancer = storage.balancer[balancer_index]
     if table_size(balancer.parts) == 0 then
-        -- balancer is not valid, remove it from global stack
+        -- balancer is not valid, remove it from storage stack
         if table_size(balancer.output_lanes) > 0 or table_size(balancer.input_lanes) > 0 then
             print("Belt-balancer: Something is off with the removing of balancer lanes")
             print("balancer: ", balancer_index)
-            print(serpent.block(global.balancer))
+            print(serpent.block(storage.balancer))
         end
 
         balancer_functions.empty_buffer(balancer, drop_to)
 
-        global.balancer[balancer_index] = nil
+        storage.balancer[balancer_index] = nil
 
         return false
     end
@@ -290,7 +290,7 @@ function balancer_functions.get_linked(balancer)
     -- create matrix
     local matrix = {}
     for _, part_index in pairs(balancer.parts) do
-        local part = global.parts[part_index]
+        local part = storage.parts[part_index]
         local pos = part.entity.position
         if not matrix[pos.x] then
             matrix[pos.x] = {}
@@ -355,7 +355,7 @@ function balancer_functions.new_from_part_list(part_list)
     local balancer = balancer_functions.new()
 
     for _, part_entity in pairs(part_list) do
-        local part = global.parts[part_entity.unit_number]
+        local part = storage.parts[part_entity.unit_number]
 
         -- add part to balancer
         balancer.parts[part_entity.unit_number] = part_entity.unit_number
@@ -364,14 +364,14 @@ function balancer_functions.new_from_part_list(part_list)
         part.balancer = balancer.unit_number
 
         for _, belt_index in pairs(part.input_belts) do
-            local belt = global.belts[belt_index]
+            local belt = storage.belts[belt_index]
 
             -- add balancer to belt
             belt.output_balancer[balancer.unit_number] = balancer.unit_number
         end
 
         for _, belt_index in pairs(part.output_belts) do
-            local belt = global.belts[belt_index]
+            local belt = storage.belts[belt_index]
 
             -- add balancer to belt
             belt.input_balancer[balancer.unit_number] = balancer.unit_number
@@ -395,7 +395,7 @@ end
 ---@param balancer_index uint
 ---@param drop_to Item_drop_param
 function balancer_functions.check_connected(balancer_index, drop_to)
-    local balancer = global.balancer[balancer_index]
+    local balancer = storage.balancer[balancer_index]
 
     local linked = balancer_functions.get_linked(balancer)
     if table_size(linked) > 1 then
@@ -409,14 +409,14 @@ function balancer_functions.check_connected(balancer_index, drop_to)
 
         -- remove old balancer from belts
         for _, part_index in pairs(balancer.parts) do
-            local part = global.parts[part_index]
+            local part = storage.parts[part_index]
             for _, belt_index in pairs(part.input_belts) do
-                local belt = global.belts[belt_index]
+                local belt = storage.belts[belt_index]
                 belt.input_balancer[balancer_index] = nil
                 belt.output_balancer[balancer_index] = nil
             end
             for _, belt_index in pairs(part.output_belts) do
-                local belt = global.belts[belt_index]
+                local belt = storage.belts[belt_index]
                 belt.input_balancer[balancer_index] = nil
                 belt.output_balancer[balancer_index] = nil
             end
@@ -425,8 +425,8 @@ function balancer_functions.check_connected(balancer_index, drop_to)
         -- clear the old balancer buffer
         balancer_functions.empty_buffer(balancer, drop_to)
 
-        -- finally, remove old balancer form global stack
-        global.balancer[balancer_index] = nil
+        -- finally, remove old balancer form storage stack
+        storage.balancer[balancer_index] = nil
     end
 end
 
