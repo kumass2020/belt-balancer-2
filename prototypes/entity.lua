@@ -1,13 +1,3 @@
-local no_collision = settings.startup["belt-balancer-remove-collision"].value
-
-local collision_box_dims
-
-if no_collision then
-    collision_box_dims = { { 0, 0 }, { 0, 0 } }
-else
-    collision_box_dims = { { -0.35, -0.35 }, { 0.35, 0.35 } }
-end
-
 data:extend {
     {
         type = "simple-entity-with-force",
@@ -24,7 +14,7 @@ data:extend {
                 percent = 60
             }
         },
-        collision_box = collision_box_dims,
+        collision_box = { { -0.35, -0.35 }, { 0.35, 0.35 } },
         selection_box = { { -0.5, -0.5 }, { 0.5, 0.5 } },
         render_layer = "object",
         animations = {

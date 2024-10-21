@@ -7,8 +7,8 @@
   "factorio_version": "2.0",
   "dependencies": [
     "base >= 2.0.0",
-    "(?) boblogistics >= 1.1.0",
-    "!belt-balancer"
+    "!belt-balancer",
+    "!belt-balancer-performance"
   ],
   "description": "Adds Balancer Parts, that can be put together, to balance all adjusting lanes. Updated for better performance and 2.0"
 }
