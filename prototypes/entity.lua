@@ -16,8 +16,7 @@ data:extend {
         },
         collision_box = { { -0.35, -0.35 }, { 0.35, 0.35 } },
         selection_box = { { -0.5, -0.5 }, { 0.5, 0.5 } },
-        collision_mask = { layers = {} },
-        render_layer = "lower-object",
+        collision_mask = { layers = { ground_tile=true, water_tile=true, resource=true, floor=true, item=true, object=true, doodad=true } },
         animations = {
             {
                 filename = "__belt-balancer-2__/graphics/entities/balancer.png",
