@@ -1,21 +1,16 @@
----convert_LuaItemStack_to_SimpleItemStack
----@param lua_item_stack LuaItemStack
+---@param stack LuaItemStack
 ---@return SimpleItemStack
-function convert_LuaItemStack_to_SimpleItemStack(lua_item_stack)
-    local simple_item = {
-        name = lua_item_stack.name,
-        count = lua_item_stack.count,
-        health = lua_item_stack.health,
+function stablize_item_stack(stack)
+    local type = stack.prototype.type
+    return {
+        name = stack.name,
+        count = stack.count,
+        quality = stack.quality,
+        health = stack.health,
+        durability = type == "tool" and stack.durability,
+        ammo = type == "ammo" and stack.ammo,
+        tags = type == "item-with-tags" and stack.tags,
+        custom_description = type == "item-with-tags" and stack.custom_description,
+        spoil_percent = stack.spoil_percent
     }
-
-    local itemtype = lua_item_stack.prototype.type
-    if itemtype == "ammo" then
-        simple_item.ammo = lua_item_stack.ammo
-    elseif itemtype == "item-with-tags" then
-        simple_item.tags = lua_item_stack.tags
-    elseif itemtype == "tool" then
-        simple_item.durability = lua_item_stack.durability
-    end
-
-    return simple_item
 end

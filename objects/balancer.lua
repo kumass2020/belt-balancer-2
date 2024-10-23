@@ -202,11 +202,9 @@ function balancer_functions.run(balancer_index)
 	for k, lane in pairs(current_lanes) do
 	    if #lane > 0 then
 		-- remove item from lane and add to buffer
-		local lua_item = lane[1]
-		-- this conversion takes a significant amount of time
-		local simple_item = convert_LuaItemStack_to_SimpleItemStack(lua_item)
-		lane.remove_item(lua_item)
-		table.insert(balancer.buffer, simple_item)
+		local item = lane[1]
+		table.insert(balancer.buffer, stablize_item_stack(item))
+		lane.remove_item(item)
 		gather_amount = gather_amount - 1
 
 		if #lane > 0 then
@@ -224,6 +222,7 @@ function balancer_functions.run(balancer_index)
     -- OUTPUT
     local starting_index = balancer.next_output
     local lane_index, lane
+    local input = balancer.buffer[1]
     if not starting_index then -- if we don't have a place to start, then we start at the beginning
 	lane_index, lane = next(balancer.output_lanes)
     else
@@ -231,22 +230,18 @@ function balancer_functions.run(balancer_index)
 	lane = balancer.output_lanes[starting_index]
     end
 
-    if lane and lane.can_insert_at_back() and lane.insert_at_back(balancer.buffer[1]) then
-	table.remove(balancer.buffer, 1)
+    local function try_insert_and_next()
 	lane_index, lane = next(balancer.output_lanes, lane_index)
-	balancer.next_output = lane_index
-    else
-	lane_index, lane = next(balancer.output_lanes, lane_index)
+	if lane and lane.can_insert_at_back() and lane.insert_at_back(input, input.count) then
+	    table.remove(balancer.buffer, 1)
+	    input = balancer.buffer[1]
+	    balancer.next_output = lane_index
+	end
     end
 
-    while lane_index ~= starting_index and next(balancer.buffer) ~= nil do -- we check lane_index first because it is faster
-	if lane and lane.can_insert_at_back() and lane.insert_at_back(balancer.buffer[1]) then
-	    table.remove(balancer.buffer, 1)
-	    lane_index, lane = next(balancer.output_lanes, lane_index)
-	    balancer.next_output = lane_index
-	else
-	    lane_index, lane = next(balancer.output_lanes, lane_index)
-	end
+    try_insert_and_next()
+    while lane_index ~= starting_index and next(balancer.buffer) ~= nil do
+	try_insert_and_next()
     end
 end
 
