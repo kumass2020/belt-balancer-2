@@ -180,64 +180,73 @@ end
 function balancer_functions.run(balancer_index)
     local balancer = storage.balancer[balancer_index]
     local output_lane_count = table_size(balancer.output_lanes)
+    if output_lane_count == 0 then
+	return
+    end
     local next_lane_count = table_size(balancer.input_lanes)
+    if next_lane_count == 0 then
+	return
+    end
 
-    if next_lane_count > 0 and output_lane_count > 0 then
-        -- get how many items are needed per lane
-        local buffer_count = #balancer.buffer
-        local gather_amount = (output_lane_count * 2) - buffer_count
+    -- get how many items are needed per lane
+    local buffer_count = #balancer.buffer
+    local gather_amount = (output_lane_count * 2) - buffer_count
 
-        local next_lanes = balancer.input_lanes
+    local next_lanes = balancer.input_lanes
 
-        -- INPUT
-        while gather_amount > 0 and next_lane_count > 0 do
-            local current_lanes = next_lanes
-            next_lanes = {}
+    -- INPUT
+    while gather_amount > 0 and next_lane_count > 0 do
+	local current_lanes = next_lanes
+	next_lanes = {}
+	next_lane_count = 0
+	for k, lane in pairs(current_lanes) do
+	    if #lane > 0 then
+		-- remove item from lane and add to buffer
+		local lua_item = lane[1]
+		-- this conversion takes a significant amount of time
+		local simple_item = convert_LuaItemStack_to_SimpleItemStack(lua_item)
+		lane.remove_item(lua_item)
+		table.insert(balancer.buffer, simple_item)
+		gather_amount = gather_amount - 1
 
-            for k, lane in pairs(current_lanes) do
-                if #lane > 0 then
-                    -- remove item from lane and add to buffer
-                    local lua_item = lane[1]
-                    local simple_item = convert_LuaItemStack_to_SimpleItemStack(lua_item)
-                    lane.remove_item(lua_item)
-                    table.insert(balancer.buffer, simple_item)
-                    gather_amount = gather_amount - 1
+		if #lane > 0 then
+		    next_lanes[k] = lane
+		    next_lane_count = next_lane_count + 1
+		end
+	    end
+	end
+    end
 
-                    next_lanes[k] = lane
-                end
-            end
-            next_lane_count = table_size(next_lanes)
-        end
+    if next(balancer.buffer) == nil then
+	return
+    end
+    
+    -- OUTPUT
+    local starting_index = balancer.next_output
+    local lane_index, lane
+    if not starting_index then -- if we don't have a place to start, then we start at the beginning
+	lane_index, lane = next(balancer.output_lanes)
+    else
+	lane_index = starting_index
+	lane = balancer.output_lanes[starting_index]
+    end
 
+    if lane and lane.can_insert_at_back() and lane.insert_at_back(balancer.buffer[1]) then
+	table.remove(balancer.buffer, 1)
+	lane_index, lane = next(balancer.output_lanes, lane_index)
+	balancer.next_output = lane_index
+    else
+	lane_index, lane = next(balancer.output_lanes, lane_index)
+    end
 
-        if #balancer.buffer == 0 then return end
-        -- put items onto the belt
-        local starting_index = balancer.next_output
-        local lane_index, lane
-        if not starting_index then -- if we don't have a place to start, then we start at the beginning
-            lane_index, lane = next(balancer.output_lanes)
-        else
-            lane_index = starting_index
-            lane = balancer.output_lanes[starting_index]
-        end
-
-        if lane and lane.can_insert_at_back() and lane.insert_at_back(balancer.buffer[1]) then
-            table.remove(balancer.buffer, 1)
-            lane_index, lane = next(balancer.output_lanes, lane_index)
-            balancer.next_output = lane_index
-        else
-            lane_index, lane = next(balancer.output_lanes, lane_index)
-        end
-
-        while lane_index ~= starting_index and #balancer.buffer > 0 do -- we check lane_index first because it is faster
-            if lane and lane.can_insert_at_back() and lane.insert_at_back(balancer.buffer[1]) then
-                table.remove(balancer.buffer, 1)
-                lane_index, lane = next(balancer.output_lanes, lane_index)
-                balancer.next_output = lane_index
-            else
-                lane_index, lane = next(balancer.output_lanes, lane_index)
-            end
-        end
+    while lane_index ~= starting_index and next(balancer.buffer) ~= nil do -- we check lane_index first because it is faster
+	if lane and lane.can_insert_at_back() and lane.insert_at_back(balancer.buffer[1]) then
+	    table.remove(balancer.buffer, 1)
+	    lane_index, lane = next(balancer.output_lanes, lane_index)
+	    balancer.next_output = lane_index
+	else
+	    lane_index, lane = next(balancer.output_lanes, lane_index)
+	end
     end
 end
 
@@ -277,7 +286,14 @@ function balancer_functions.empty_buffer(balancer, drop_to)
     else
         -- drop items on ground
         for _, item in pairs(balancer.buffer) do
-            drop_to.surface.spill_item_stack(drop_to.position, item, false, drop_to.force, true, 2, true)
+            drop_to.surface.spill_item_stack({
+		    position=drop_to.position,
+		    stack=item,
+		    enable_looted=false,
+		    force=drop_to.force,
+		    allow_belts=true,
+		    max_radius=2,
+		    use_start_position_on_failure=true})
         end
     end
 end
