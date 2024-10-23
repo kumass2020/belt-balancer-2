@@ -231,11 +231,13 @@ function balancer_functions.run(balancer_index)
     end
 
     local function try_insert_and_next()
-	lane_index, lane = next(balancer.output_lanes, lane_index)
 	if lane and lane.can_insert_at_back() and lane.insert_at_back(input, input.count) then
 	    table.remove(balancer.buffer, 1)
 	    input = balancer.buffer[1]
+	    lane_index, lane = next(balancer.output_lanes, lane_index)
 	    balancer.next_output = lane_index
+	else
+	    lane_index, lane = next(balancer.output_lanes, lane_index)
 	end
     end
 
