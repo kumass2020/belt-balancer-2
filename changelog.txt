@@ -1,4 +1,11 @@
 ---------------------------------------------------------------------------------------------------
+Version: 2.0.8
+Date: 24.10.2024
+  Bugfix:
+    - Fix collision mask for balancers, they can now be placed like how belts can
+    - Add recipes and research for turbo belts (Space Age)
+    - Fix crash when repair packs go through balancers
+---------------------------------------------------------------------------------------------------
 Version: 2.0.7
 Date: 23.10.2024
   Bugfix:

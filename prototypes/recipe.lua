@@ -43,63 +43,25 @@ data:extend {
             { type="item", name="balancer-part", amount=3 }
         },
         order = "g[balancer]-c[balancer]"
-    },
+    }
 }
 
-if mods["boblogistics"] then
-    -- add recipes for the additional boblogistics belts
-    if settings.startup["bobmods-logistics-beltoverhaul"].value == true then
-        data:extend {
-            {
-                type = "recipe",
-                name = "belt-balancer-basic-belt",
-                enabled = false,
-                energy_required = 5,
-                ingredients = {
-                    { type="item", name="iron-gear-wheel", amount=25 },
-                    { type="item", name="electronic-circuit", amount=20 },
-                    { type="item", name="basic-transport-belt", amount=10 },
-                },
-                results = {
-                    { type="item", name="balancer-part", amount=1 }
-                },
-                order = "g[balancer]-0a[balancer]"
-            },
-        }
-    end
-
+if mods["space-age"] then
     data:extend {
         {
             type = "recipe",
             name = "belt-balancer-turbo-belt",
             enabled = false,
-            energy_required = 1.8,
+            energy_required = 1.5,
             ingredients = {
                 { type="item", name="iron-gear-wheel", amount=20 },
-                { type="item", name="processing-unit", amount=3 },
-                { type="item", name="turbo-transport-belt", amount=10 },
+                { type="item", name="processing-unit", amount=15 },
+                { type="item", name="express-transport-belt", amount=5 },
             },
             results = {
                 { type="item", name="balancer-part", amount=4 }
             },
-            order = "g[balancer]-d[balancer]"
-        },
-        {
-            type = "recipe",
-            name = "belt-balancer-ultimate-belt",
-            enabled = false,
-            energy_required = 1.5,
-            ingredients = {
-                { type="item", name="iron-gear-wheel", amount=20 },
-                { type="item", name="processing-unit", amount=5 },
-                { type="item", name="ultimate-transport-belt", amount=10 },
-            },
-            results = {
-                { type="item", name="balancer-part", 5 }
-            },
-            order = "g[balancer]-e[balancer]"
+            order = "g[balancer]-c[balancer]"
         },
     }
 end
-
--- NOTICE IndustrialRevolution is not developed anymore and it will not be updated to 0.18 :(
