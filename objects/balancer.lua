@@ -283,14 +283,7 @@ function balancer_functions.empty_buffer(balancer, drop_to)
     else
         -- drop items on ground
         for _, item in pairs(balancer.buffer) do
-            drop_to.surface.spill_item_stack({
-		    position=drop_to.position,
-		    stack=item,
-		    enable_looted=false,
-		    force=drop_to.force,
-		    allow_belts=true,
-		    max_radius=2,
-		    use_start_position_on_failure=true})
+            drop_to.surface.spill_item_stack{position=drop_to.position, stack=item, force=drop_to.force, max_radius=2}
         end
     end
 end
