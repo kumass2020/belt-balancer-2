@@ -199,23 +199,24 @@ function balancer_functions.run(balancer_index)
 	local current_lanes = next_lanes
 	next_lanes = {}
 	next_lane_count = 0
-	for k, lane in pairs(current_lanes) do
+	for _, lane in pairs(current_lanes) do
 	    if #lane > 0 then
 		-- remove item from lane and add to buffer
 		local item = lane[1]
-		table.insert(balancer.buffer, stablize_item_stack(item))
+		buffer_count = buffer_count + 1
+		balancer.buffer[buffer_count] = stablize_item_stack(item)
 		lane.remove_item(item)
 		gather_amount = gather_amount - 1
 
 		if #lane > 0 then
-		    next_lanes[k] = lane
 		    next_lane_count = next_lane_count + 1
+		    next_lanes[next_lane_count] = lane
 		end
 	    end
 	end
     end
 
-    if next(balancer.buffer) == nil then
+    if buffer_count == 0 then
 	return
     end
     
@@ -231,7 +232,7 @@ function balancer_functions.run(balancer_index)
     end
 
     local function try_insert_and_next()
-	if lane and lane.can_insert_at_back() and lane.insert_at_back(input, input.count) then
+	if lane and lane.insert_at_back(input, input.count) then
 	    table.remove(balancer.buffer, 1)
 	    input = balancer.buffer[1]
 	    lane_index, lane = next(balancer.output_lanes, lane_index)
