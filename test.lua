@@ -34,6 +34,7 @@ function test_mod(player_index)
             name = "creative-mod_item-source",
             position = position,
             force = player.force,
+	    use_filters = true,
             filters = { { index = 1, name = "iron-plate" }, { index = 2, name = "iron-ore" } },
             raise_built = true
         }
@@ -147,13 +148,15 @@ function test_mod(player_index)
         direction = direction or defines.direction.south
         type = type or "output"
 
+	-- need to do this to raise destroy
+	destroy_entity(position)
+
         return surface.create_entity {
             name = entity_name,
             position = position,
             direction = direction,
             force = player.force,
             raise_built = true,
-            fast_replace = true,
             type = type
         }
     end
@@ -1519,6 +1522,7 @@ function test_mod_logic(player_index)
             name = "creative-mod_item-source",
             position = position,
             force = player.force,
+	    use_filters = true,
             filters = { { index = 1, name = "iron-plate" }, { index = 2, name = "iron-ore" } },
             raise_built = true
         }
@@ -1623,13 +1627,14 @@ function test_mod_logic(player_index)
         direction = direction or defines.direction.south
         type = type or "output"
 
+	destroy_entity(position)
+
         return surface.create_entity {
             name = entity_name,
             position = position,
             direction = direction,
             force = player.force,
             raise_built = true,
-            fast_replace = true,
             type = type
         }
     end

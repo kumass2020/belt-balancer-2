@@ -180,60 +180,70 @@ end
 function balancer_functions.run(balancer_index)
     local balancer = storage.balancer[balancer_index]
     local output_lane_count = table_size(balancer.output_lanes)
+    if output_lane_count == 0 then
+	return
+    end
     local next_lane_count = table_size(balancer.input_lanes)
+    if next_lane_count == 0 then
+	return
+    end
 
-    if next_lane_count > 0 and output_lane_count > 0 then
-        -- get how many items are needed per lane
-        local buffer_count = #balancer.buffer
-        local gather_amount = (output_lane_count * 2) - buffer_count
+    -- get how many items are needed per lane
+    local buffer_count = #balancer.buffer
+    local gather_amount = (output_lane_count * 2) - buffer_count
 
-        local next_lanes = balancer.input_lanes
+    local next_lanes = balancer.input_lanes
 
-        -- INPUT
-        while gather_amount > 0 and next_lane_count > 0 do
-            local current_lanes = next_lanes
-            next_lanes = {}
+    -- INPUT
+    while gather_amount > 0 and next_lane_count > 0 do
+	local current_lanes = next_lanes
+	next_lanes = {}
+	next_lane_count = 0
+	for k, lane in pairs(current_lanes) do
+	    if #lane > 0 then
+		-- remove item from lane and add to buffer
+		local item = lane[1]
+		table.insert(balancer.buffer, stablize_item_stack(item))
+		lane.remove_item(item)
+		gather_amount = gather_amount - 1
 
-            for k, lane in pairs(current_lanes) do
-                if #lane > 0 then
-                    -- remove item from lane and add to buffer
-                    local item = lane[1]
-                    table.insert(balancer.buffer, stablize_item_stack(item))
-                    lane.remove_item(item)
-                    gather_amount = gather_amount - 1
+		if #lane > 0 then
+		    next_lanes[k] = lane
+		    next_lane_count = next_lane_count + 1
+		end
+	    end
+	end
+    end
 
-                    next_lanes[k] = lane
-                end
-            end
-            next_lane_count = table_size(next_lanes)
-        end
+    if next(balancer.buffer) == nil then
+	return
+    end
+    
+    -- OUTPUT
+    local starting_index = balancer.next_output
+    local lane_index, lane
+    local input = balancer.buffer[1]
+    if not starting_index then -- if we don't have a place to start, then we start at the beginning
+	lane_index, lane = next(balancer.output_lanes)
+    else
+	lane_index = starting_index
+	lane = balancer.output_lanes[starting_index]
+    end
 
+    local function try_insert_and_next()
+	if lane and lane.can_insert_at_back() and lane.insert_at_back(input, input.count) then
+	    table.remove(balancer.buffer, 1)
+	    input = balancer.buffer[1]
+	    lane_index, lane = next(balancer.output_lanes, lane_index)
+	    balancer.next_output = lane_index
+	else
+	    lane_index, lane = next(balancer.output_lanes, lane_index)
+	end
+    end
 
-        if #balancer.buffer == 0 then return end
-        -- put items onto the belt
-        local starting_index = balancer.next_output
-        local lane_index, lane
-        local input = balancer.buffer[1]
-        if not starting_index then -- if we don't have a place to start, then we start at the beginning
-            lane_index, lane = next(balancer.output_lanes)
-        else
-            lane_index = starting_index
-            lane = balancer.output_lanes[starting_index]
-        end
-
-        local function try_insert_and_next()
-            lane_index, lane = next(balancer.output_lanes, lane_index)
-            if lane and lane.can_insert_at_back() and lane.insert_at_back(input, input.count) then
-                table.remove(balancer.buffer, 1)
-                input = balancer.buffer[1]
-                balancer.next_output = lane_index
-            end
-        end
-
-        try_insert_and_next()
-        while lane_index ~= starting_index and #balancer.buffer > 0 do -- we check lane_index first because it is faster
-            try_insert_and_next()
-        end
+    try_insert_and_next()
+    while lane_index ~= starting_index and next(balancer.buffer) ~= nil do
+	try_insert_and_next()
     end
 end
 
