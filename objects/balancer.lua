@@ -137,6 +137,12 @@ function balancer_functions.recalculate_nth_tick(balancer_index)
         local stack_part = storage.parts[part]
         for _, belt in pairs(stack_part.output_belts) do
             local stack_belt = storage.belts[belt]
+			
+	    -- Check if belt is not a nil value
+	    if not stack_belt or stack_belt == nil then
+	        goto continue
+	    end
+			
             local belt_speed = stack_belt.entity.prototype.belt_speed
             local ticks_per_tile = 0.25 / belt_speed
             local nth_tick = math.floor(ticks_per_tile)
@@ -145,6 +151,7 @@ function balancer_functions.recalculate_nth_tick(balancer_index)
                 break
             end
             tick_list[nth_tick] = nth_tick
+	    ::continue::
         end
 
         if run_on_tick_override then
