@@ -211,6 +211,11 @@ function part_functions.remove(entity, buffer)
     for _, belt_index in pairs(part.input_belts) do
         local belt = storage.belts[belt_index]
 
+	-- Check if belt is not a nil value
+        if not belt or belt == nil then
+        	goto continue
+        end
+
         -- only remove lanes, if this is splitter
         if belt.type == "splitter" then
             local into_pos, _ = belt_functions.get_input_output_pos_splitter(belt.entity)
